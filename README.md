@@ -2,4 +2,4 @@
 
 ## Master Project in Data Science
 
-Read me will be added soon.
+Thesis can be found here -> https://oa.upm.es/71384/
