@@ -66,4 +66,4 @@ if __name__=="__main__":
         write = csv.writer(file)
         write.writerow(fields)
         write.writerows(near_stops)
-    print(f"Finished in {time()-t1} s")
+    print(f"Finished in {round(time()-t1)} (s).")
