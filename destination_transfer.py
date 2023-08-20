@@ -450,7 +450,7 @@ def detect_transfers(usersDf, linesRailDf, nearStopDf, allUniqueStopDf, allStopW
     Returns:
         pd.DataFrame: The input users' DataFrame with added 'transfer' and 'destination' columns.
     """
-    cardID_first = usersDf.iloc[0, 0]
+    cardID_first = usersDf.iloc[0, usersDf.columns.get_loc("cardID")]
     transferList = []
     destinationList = []
 
@@ -458,57 +458,56 @@ def detect_transfers(usersDf, linesRailDf, nearStopDf, allUniqueStopDf, allStopW
     for transaction in tqdm(range(len(usersDf)-1)):
         destination = -1
         transfer = False
-        cardID_second = usersDf.iloc[transaction+1, 0]
+        cardID_second = usersDf.iloc[transaction+1, usersDf.columns.get_loc("cardID")]
 
         if(cardID_second != cardID_first):
-            firstTripStopID = usersDf.iloc[transaction-count, 8]
+            firstTripStopID = usersDf.iloc[transaction-count, usersDf.columns.get_loc("IDSTOP")]
 
-            if (usersDf.iloc[transaction-count, 6] == 0 and usersDf.iloc[transaction, 6] == 0) and (firstTripStopID != usersDf.iloc[transaction, 8]):
-                currentLineList = allStopWithLines[allStopWithLines.IDSTOP == firstTripStopID].iat[0,-1]
-                nextLineList  = allStopWithLines[allStopWithLines.IDSTOP == usersDf.iloc[transaction,8]].iat[0,-1]
+            if (usersDf.iloc[transaction-count, usersDf.columns.get_loc("type")] == 0 and usersDf.iloc[transaction, usersDf.columns.get_loc("type")] == 0) and (firstTripStopID != usersDf.iloc[transaction, usersDf.columns.get_loc("IDSTOP")]):
+                currentLineList = allStopWithLines[allStopWithLines.IDSTOP == firstTripStopID].iat[0, allStopWithLines.columns.get_loc("lines")]
+                nextLineList  = allStopWithLines[allStopWithLines.IDSTOP == usersDf.iloc[transaction, usersDf.columns.get_loc("IDSTOP")]].iat[0, allStopWithLines.columns.get_loc("lines")]
                 if isin_list(currentLineList, nextLineList):
                     destination = firstTripStopID
                 else: 
-                    nearList = ast.literal_eval(nearStopDf[nearStopDf['stop'] == firstTripStopID].iat[0,1])
+                    nearList = ast.literal_eval(nearStopDf[nearStopDf['stop'] == firstTripStopID].iat[0, nearStopDf.columns.get_loc("near_stops")])
                     for station in nearList:
-                        if allStopWithLines[allStopWithLines.IDSTOP == station].iat[0, 4] == 0:
-                            currentLineList = allStopWithLines[allStopWithLines.IDSTOP == station].iat[0,-1]
+                        if allStopWithLines[allStopWithLines.IDSTOP == station].iat[0, allStopWithLines.columns.get_loc("type")] == 0:
+                            currentLineList = allStopWithLines[allStopWithLines.IDSTOP == station].iat[0,allStopWithLines.columns.get_loc("lines")]
                             if isin_list(nextLineList, currentLineList):
                                 destination = firstTripStopID
                                 break
 
-            if (usersDf.iloc[transaction-count, 6] == 1 and usersDf.iloc[transaction, 6] == 1) and (firstTripStopID != usersDf.iloc[transaction, 8]):
-                firstLine = usersDf.iloc[transaction-count, 7]
-                lastLine  = usersDf.iloc[transaction, 7]
+            if (usersDf.iloc[transaction-count, usersDf.columns.get_loc("type")] == 1 and usersDf.iloc[transaction, usersDf.columns.get_loc("type")] == 1) and (firstTripStopID != usersDf.iloc[transaction, usersDf.columns.get_loc("IDSTOP")]):
+                firstLine = usersDf.iloc[transaction-count, usersDf.columns.get_loc("IDLINEA")]
+                lastLine  = usersDf.iloc[transaction, usersDf.columns.get_loc("IDLINEA")]
                 if firstLine == lastLine:
                     destination = firstTripStopID
                 else: 
-                    nearList = ast.literal_eval(nearStopDf[nearStopDf['stop'] == firstTripStopID].iat[0,1])
+                    nearList = ast.literal_eval(nearStopDf[nearStopDf['stop'] == firstTripStopID].iat[0, nearStopDf.columns.get_loc("near_stops")])
                     for stop in nearList:
-                        if allStopWithLines[allStopWithLines.IDSTOP == stop].iat[0, 4] == 1:
-                            bufferLineList = allStopWithLines[allStopWithLines.IDSTOP == stop].iat[0,-1]
+                        if allStopWithLines[allStopWithLines.IDSTOP == stop].iat[0, allStopWithLines.columns.get_loc("type")] == 1:
+                            bufferLineList = allStopWithLines[allStopWithLines.IDSTOP == stop].iat[0, allStopWithLines.columns.get_loc("lines")]
                             if lastLine in bufferLineList:
                                 destination = firstTripStopID
                                 break
 
-            if (usersDf.iloc[transaction-count, 6] == 1 and usersDf.iloc[transaction, 6] == 0):
-                currentLine = usersDf.iloc[transaction-count, 7]
-                nextLineList  = allStopWithLines[allStopWithLines.IDSTOP == usersDf.iloc[transaction, 8]].iat[0,-1]
-                nearList = ast.literal_eval(nearStopDf[nearStopDf['stop'] == firstTripStopID].iat[0,1])
+            if (usersDf.iloc[transaction-count, usersDf.columns.get_loc("type")] == 1 and usersDf.iloc[transaction, usersDf.columns.get_loc("type")] == 0):
+                nextLineList  = allStopWithLines[allStopWithLines.IDSTOP == usersDf.iloc[transaction, usersDf.columns.get_loc("IDSTOP")]].iat[0, allStopWithLines.columns.get_loc("lines")]
+                nearList = ast.literal_eval(nearStopDf[nearStopDf['stop'] == firstTripStopID].iat[0, nearStopDf.columns.get_loc("near_stops")])
                 for station in nearList:
-                    if allStopWithLines[allStopWithLines.IDSTOP == station].iat[0, 4] == 0:
-                        currentLineList = allStopWithLines[allStopWithLines.IDSTOP == station].iat[0,-1]
+                    if allStopWithLines[allStopWithLines.IDSTOP == station].iat[0, allStopWithLines.columns.get_loc("type")] == 0:
+                        currentLineList = allStopWithLines[allStopWithLines.IDSTOP == station].iat[0, allStopWithLines.columns.get_loc("lines")]
                         if isin_list(nextLineList, currentLineList):
                             destination = firstTripStopID
                             break
 
-            if (usersDf.iloc[transaction-count, 6] == 0 and usersDf.iloc[transaction, 6] == 1):
-                currentLineList = allStopWithLines[allStopWithLines.IDSTOP == usersDf.iloc[transaction-count, 8]].iat[0,-1]
-                nextLine = usersDf.iloc[transaction, 7] 
-                nearList = ast.literal_eval(nearStopDf[nearStopDf['stop'] == firstTripStopID].iat[0,1])
+            if (usersDf.iloc[transaction-count, usersDf.columns.get_loc("type")] == 0 and usersDf.iloc[transaction, usersDf.columns.get_loc("type")] == 1):
+                currentLineList = allStopWithLines[allStopWithLines.IDSTOP == usersDf.iloc[transaction-count, usersDf.columns.get_loc("IDSTOP")]].iat[0, allStopWithLines.columns.get_loc("lines")]
+                nextLine = usersDf.iloc[transaction, usersDf.columns.get_loc("IDLINEA")] 
+                nearList = ast.literal_eval(nearStopDf[nearStopDf['stop'] == firstTripStopID].iat[0, nearStopDf.columns.get_loc("near_stops")])
                 for stop in nearList:
-                    if allStopWithLines[allStopWithLines.IDSTOP == stop].iat[0, 4] == 1:
-                        currentLineList = allStopWithLines[allStopWithLines.IDSTOP == stop].iat[0,-1]
+                    if allStopWithLines[allStopWithLines.IDSTOP == stop].iat[0, allStopWithLines.columns.get_loc("type")] == 1:
+                        currentLineList = allStopWithLines[allStopWithLines.IDSTOP == stop].iat[0, allStopWithLines.columns.get_loc("lines")]
                         if isin_list(nextLine, currentLineList):               
                             destination = firstTripStopID
                             break
@@ -518,13 +517,13 @@ def detect_transfers(usersDf, linesRailDf, nearStopDf, allUniqueStopDf, allStopW
         else:
             count += 1
             record = usersDf.iloc[[transaction, transaction+1]]
-            if usersDf.iloc[transaction, 6] == 0 and usersDf.iloc[transaction+1, 6] == 0:
+            if usersDf.iloc[transaction, usersDf.columns.get_loc("type")] == 0 and usersDf.iloc[transaction+1, usersDf.columns.get_loc("type")] == 0:
                 transfer, destination = transferRail(record, linesRailDf, nearStopDf, allUniqueStopDf, allStopWithLinesOnly)
-            elif usersDf.iloc[transaction, 6] == 1 and usersDf.iloc[transaction+1, 6] == 1:
+            elif usersDf.iloc[transaction, usersDf.columns.get_loc("type")] == 1 and usersDf.iloc[transaction+1, usersDf.columns.get_loc("type")] == 1:
                 transfer, destination = transferBus(record, nearStopDf, allUniqueStopDf, allStopWithLinesOnly)
-            elif usersDf.iloc[transaction, 6] == 0 and usersDf.iloc[transaction+1, 6] == 1:
+            elif usersDf.iloc[transaction, usersDf.columns.get_loc("type")] == 0 and usersDf.iloc[transaction+1, usersDf.columns.get_loc("type")] == 1:
                 transfer, destination = transferRailBus(record, linesRailDf, nearStopDf, allUniqueStopDf, allStopWithLinesOnly)
-            elif usersDf.iloc[transaction, 6] == 1 and usersDf.iloc[transaction+1, 6] == 0:
+            elif usersDf.iloc[transaction, usersDf.columns.get_loc("type")] == 1 and usersDf.iloc[transaction+1, usersDf.columns.get_loc("type")] == 0:
                 transfer, destination = transferBusRail(record, nearStopDf, allUniqueStopDf, allStopWithLinesOnly)
 
         transferList.append(transfer)
@@ -553,7 +552,10 @@ if __name__=="__main__":
     linesRailDf, nearStopDf, usersDf, allUniqueStopDf, allStopWithLinesOnly, allStopWithLines = load(**config_dict)
     print(f"Loaded data in {round((time()-t1) / 60,1)} minutes")
 
-    # Calculate transfers
+    # Format to match old thesis column order
+    usersDf = usersDf[["cardID","date","DPAYPOINT","DENOMINAPARADA","LATITUD","LONGITUD","type","IDLINEA","IDSTOP"]]
+    
+    # Detect transfers
     usersDf = detect_transfers(usersDf, linesRailDf, nearStopDf, allUniqueStopDf, allStopWithLinesOnly, allStopWithLines)
     
     # Save
