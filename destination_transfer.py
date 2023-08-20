@@ -209,20 +209,21 @@ def transferRail(record, linesRailDf, nearStopDf, allUniqueStopDf, allStopWithLi
     """
 
     # Convert date column to datetime
-    record["date"] = pd.to_datetime(record["date"])
+    recordDf = record.copy()  # Make a copy of the input record to avoid unintended modifications
+    recordDf["date"] = pd.to_datetime(recordDf["date"])
 
     # Calculate time difference in minutes
-    actualTimeDiff = (record.iloc[1, 1] - record.iloc[0, 1]).seconds / 60
+    actualTimeDiff = (recordDf.iloc[1, 1] - recordDf.iloc[0, 1]).seconds / 60
 
     # Retrieve line lists
-    currentLineList = linesRailDf[linesRailDf.DENOMINAPARADA == record.iloc[0, 3]].iat[0, 1]
-    nextLineList = linesRailDf[linesRailDf.DENOMINAPARADA == record.iloc[1, 3]].iat[0, 1]
+    currentLineList = linesRailDf[linesRailDf.DENOMINAPARADA == recordDf.iloc[0, 3]].iat[0, 1]
+    nextLineList = linesRailDf[linesRailDf.DENOMINAPARADA == recordDf.iloc[1, 3]].iat[0, 1]
 
     # Retrieve coordinates
-    lat1 = record.iloc[0, 4]
-    lon1 = record.iloc[0, 5]
-    lat2 = record.iloc[1, 4]
-    lon2 = record.iloc[1, 5]
+    lat1 = recordDf.iloc[0, 4]
+    lon1 = recordDf.iloc[0, 5]
+    lat2 = recordDf.iloc[1, 4]
+    lon2 = recordDf.iloc[1, 5]
 
     # Calculate distance
     dist = distance_calculate(lat1, lat2, lon1, lon2)
@@ -236,7 +237,7 @@ def transferRail(record, linesRailDf, nearStopDf, allUniqueStopDf, allStopWithLi
         if actualTimeDiff < maxTime:
             transfer = True
     else:
-        bufferZoneList = nearStopDf[nearStopDf['stop'] == record.iloc[1, 8]].iat[0, 1]
+        bufferZoneList = nearStopDf[nearStopDf['stop'] == recordDf.iloc[1, 8]].iat[0, 1]
         bufferZoneList = ast.literal_eval(bufferZoneList)
 
         for station in bufferZoneList:
