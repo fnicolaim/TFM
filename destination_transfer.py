@@ -213,17 +213,17 @@ def transferRail(record, linesRailDf, nearStopDf, allUniqueStopDf, allStopWithLi
     recordDf["date"] = pd.to_datetime(recordDf["date"])
 
     # Calculate time difference in minutes
-    actualTimeDiff = (recordDf.iloc[1, 1] - recordDf.iloc[0, 1]).seconds / 60
+    actualTimeDiff = (recordDf.iloc[1, recordDf.columns.get_loc("date")] - recordDf.iloc[0, recordDf.columns.get_loc("date")]).seconds / 60
 
     # Retrieve line lists
-    currentLineList = linesRailDf[linesRailDf.DENOMINAPARADA == recordDf.iloc[0, 3]].iat[0, 1]
-    nextLineList = linesRailDf[linesRailDf.DENOMINAPARADA == recordDf.iloc[1, 3]].iat[0, 1]
+    currentLineList = linesRailDf[linesRailDf.DENOMINAPARADA == recordDf.iloc[0, recordDf.columns.get_loc("DENOMINAPARADA")]].iat[0, linesRailDf.columns.get_loc("lines")]
+    nextLineList = linesRailDf[linesRailDf.DENOMINAPARADA == recordDf.iloc[1, recordDf.columns.get_loc("DENOMINAPARADA")]].iat[0, linesRailDf.columns.get_loc("lines")]
 
     # Retrieve coordinates
-    lat1 = recordDf.iloc[0, 4]
-    lon1 = recordDf.iloc[0, 5]
-    lat2 = recordDf.iloc[1, 4]
-    lon2 = recordDf.iloc[1, 5]
+    lat1 = recordDf.iat[0, recordDf.columns.get_loc("LATITUD")]
+    lon1 = recordDf.iat[0, recordDf.columns.get_loc("LONGITUD")]
+    lat2 = recordDf.iat[1, recordDf.columns.get_loc("LATITUD")]
+    lon2 = recordDf.iat[1, recordDf.columns.get_loc("LONGITUD")]
 
     # Calculate distance
     dist = distance_calculate(lat1, lat2, lon1, lon2)
@@ -237,22 +237,22 @@ def transferRail(record, linesRailDf, nearStopDf, allUniqueStopDf, allStopWithLi
         if actualTimeDiff < maxTime:
             transfer = True
     else:
-        bufferZoneList = nearStopDf[nearStopDf['stop'] == recordDf.iloc[1, 8]].iat[0, 1]
+        bufferZoneList = nearStopDf[nearStopDf['stop'] == recordDf.iloc[1, recordDf.columns.get_loc("IDSTOP")]].iat[0, nearStopDf.columns.get_loc("near_stops")]
         bufferZoneList = ast.literal_eval(bufferZoneList)
 
         for station in bufferZoneList:
             station = float(station)
-            typeOfTransport = allUniqueStopDf[allUniqueStopDf['IDSTOP'] == station].iat[0, 4]
+            typeOfTransport = allUniqueStopDf[allUniqueStopDf['IDSTOP'] == station].iat[0, allUniqueStopDf.columns.get_loc("type")]
 
             if typeOfTransport == 0:
                 currentCandLineDf = allStopWithLinesOnly[allStopWithLinesOnly.IDSTOP == station]
                 if len(currentCandLineDf) > 0:
-                    currentCandList = currentCandLineDf.iat[0, 1]
+                    currentCandList = currentCandLineDf.iat[0, currentCandLineDf.columns.get_loc("lines")]
 
                     if isin_list(currentCandList, nextLineList):
                         dest_stop = station
-                        cand_lat2 = allUniqueStopDf[allUniqueStopDf.IDSTOP == station].iat[0, 1]
-                        cand_lon2 = allUniqueStopDf[allUniqueStopDf.IDSTOP == station].iat[0, 2]
+                        cand_lat2 = allUniqueStopDf[allUniqueStopDf.IDSTOP == station].iat[0, allUniqueStopDf.columns.get_loc("LATITUD")]
+                        cand_lon2 = allUniqueStopDf[allUniqueStopDf.IDSTOP == station].iat[0, allUniqueStopDf.columns.get_loc("LONGITUD")]
                         can_dist = distance_calculate(lat1, cand_lat2, lon1, cand_lon2)
                         walking_dist = distance_calculate(cand_lat2, lat2, cand_lon2, lon2)
                         maxTime = (can_dist / 500) + 5 + (walking_dist / 50) + 10
@@ -286,31 +286,31 @@ def transferBus(record, nearStopDf, allUniqueStopDf, allStopWithLinesOnly):
     recordDf = record.copy()  # Make a copy of the input record to avoid unintended modifications
     recordDf["date"] = pd.to_datetime(recordDf["date"])
 
-    if record.iat[0, 7] != record.iat[1, 7]:
-        actualTimeDiff = (recordDf.iloc[1, 1] - recordDf.iloc[0, 1]).seconds / 60
-        currentLine = recordDf.iloc[0, 7]
-        lat1 = recordDf.iloc[0, 4]
-        lon1 = recordDf.iloc[0, 5]
-        lat2 = recordDf.iloc[1, 4]
-        lon2 = recordDf.iloc[1, 5]
+    if recordDf.iat[0, recordDf.columns.get_loc("IDLINEA")] != recordDf.iat[1, recordDf.columns.get_loc("IDLINEA")]:
+        actualTimeDiff = (recordDf.iloc[1, recordDf.columns.get_loc("date")] - recordDf.iloc[0, recordDf.columns.get_loc("date")]).seconds / 60
+        currentLine = recordDf.iloc[0, recordDf.columns.get_loc("IDLINEA")]
+        lat1 = recordDf.iat[0, recordDf.columns.get_loc("LATITUD")]
+        lon1 = recordDf.iat[0, recordDf.columns.get_loc("LONGITUD")]
+        lat2 = recordDf.iat[1, recordDf.columns.get_loc("LATITUD")]
+        lon2 = recordDf.iat[1, recordDf.columns.get_loc("LONGITUD")]
 
-        bufferZoneList = nearStopDf[nearStopDf['stop'] == recordDf.iloc[1, 8]].iat[0, 1]
+        bufferZoneList = nearStopDf[nearStopDf['stop'] == recordDf.iloc[1, recordDf.columns.get_loc("IDSTOP")]].iat[0, nearStopDf.columns.get_loc("near_stops")]
         bufferZoneList = ast.literal_eval(bufferZoneList)
 
         for stop in bufferZoneList:
             stop = float(stop)
-            typeOfTransport = allUniqueStopDf[allUniqueStopDf['IDSTOP'] == stop].iat[0, 4]
+            typeOfTransport = allUniqueStopDf[allUniqueStopDf['IDSTOP'] == stop].iat[0, allUniqueStopDf.columns.get_loc("type")]
 
             if typeOfTransport == 1:
                 candStopBusLineDf = allStopWithLinesOnly[allStopWithLinesOnly.IDSTOP == stop]
 
                 if len(candStopBusLineDf) > 0:
-                    candStopBusLineList = candStopBusLineDf.iat[0, 1]
+                    candStopBusLineList = candStopBusLineDf.iat[0, candStopBusLineDf.columns.get_loc("lines")]
 
                     if currentLine in candStopBusLineList:
                         dest_stop = stop
-                        cand_lat2 = allUniqueStopDf[allUniqueStopDf.IDSTOP == stop].iat[0, 1]
-                        cand_lon2 = allUniqueStopDf[allUniqueStopDf.IDSTOP == stop].iat[0, 2]
+                        cand_lat2 = allUniqueStopDf[allUniqueStopDf.IDSTOP == stop].iat[0, allUniqueStopDf.columns.get_loc("LATITUD")]
+                        cand_lon2 = allUniqueStopDf[allUniqueStopDf.IDSTOP == stop].iat[0, allUniqueStopDf.columns.get_loc("LONGITUD")]
                         can_dist = distance_calculate(lat1, cand_lat2, lon1, cand_lon2)
                         walking_dist = distance_calculate(cand_lat2, lat2, cand_lon2, lon2)
                         maxTime = (can_dist / 250) + 10 + (walking_dist / 50)
@@ -343,31 +343,31 @@ def transferRailBus(record, linesRailDf, nearStopDf, allUniqueStopDf, allStopWit
     recordDf = record.copy()  # Make a copy of the input record to avoid unintended modifications
     recordDf["date"] = pd.to_datetime(recordDf["date"])
 
-    actualTimeDiff = (recordDf.iloc[1, 1] - recordDf.iloc[0, 1]).seconds / 60
-    currentLineList = linesRailDf[linesRailDf.DENOMINAPARADA == recordDf.iloc[0, 3]].iat[0, 1]
-    lat1 = recordDf.iloc[0, 4]
-    lon1 = recordDf.iloc[0, 5]
-    nextBoardingStopID = recordDf.iat[0, 8]
-    lat2 = recordDf.iat[1, 4]
-    lon2 = recordDf.iat[1, 5]
+    actualTimeDiff = (recordDf.iloc[1, recordDf.columns.get_loc("date")] - recordDf.iloc[0, recordDf.columns.get_loc("date")]).seconds / 60
+    currentLineList = linesRailDf[linesRailDf.DENOMINAPARADA == recordDf.iloc[0, recordDf.columns.get_loc("DENOMINAPARADA")]].iat[0, linesRailDf.columns.get_loc("lines")]
+    lat1 = recordDf.iat[0, recordDf.columns.get_loc("LATITUD")]
+    lon1 = recordDf.iat[0, recordDf.columns.get_loc("LONGITUD")]
+    lat2 = recordDf.iat[1, recordDf.columns.get_loc("LATITUD")]
+    lon2 = recordDf.iat[1, recordDf.columns.get_loc("LONGITUD")]
 
-    bufferZoneList = nearStopDf[nearStopDf['stop'] == nextBoardingStopID].iat[0, 1]
+    nextBoardingStopID = recordDf.iat[0, recordDf.columns.get_loc("IDSTOP")]
+    bufferZoneList = nearStopDf[nearStopDf['stop'] == nextBoardingStopID].iat[0, nearStopDf.columns.get_loc("near_stops")]
     bufferZoneList = ast.literal_eval(bufferZoneList)
 
     for station in bufferZoneList:
         station = float(station)
-        typeOfTransport = allUniqueStopDf[allUniqueStopDf['IDSTOP'] == station].iat[0, 4]
+        typeOfTransport = allUniqueStopDf[allUniqueStopDf['IDSTOP'] == station].iat[0, allUniqueStopDf.columns.get_loc("type")]
 
         if typeOfTransport == 0:
             candStationLineDf = allStopWithLinesOnly[allStopWithLinesOnly.IDSTOP == station]
 
             if len(candStationLineDf) > 0:
-                candStationLineList = candStationLineDf.iat[0, 1]
+                candStationLineList = candStationLineDf.iat[0, candStationLineDf.columns.get_loc("lines")]
 
                 if isin_list(currentLineList, candStationLineList):
                     dest_stop = station
-                    cand_lat2 = allUniqueStopDf[allUniqueStopDf.IDSTOP == station].iat[0, 1]
-                    cand_lon2 = allUniqueStopDf[allUniqueStopDf.IDSTOP == station].iat[0, 2]
+                    cand_lat2 = allUniqueStopDf[allUniqueStopDf.IDSTOP == station].iat[0, allUniqueStopDf.columns.get_loc("LATITUD")]
+                    cand_lon2 = allUniqueStopDf[allUniqueStopDf.IDSTOP == station].iat[0, allUniqueStopDf.columns.get_loc("LONGITUD")]
                     can_dist = distance_calculate(lat1, cand_lat2, lon1, cand_lon2)
                     walking_dist = distance_calculate(cand_lat2, lat2, cand_lon2, lon2)
                     maxTime = (can_dist / 500) + (walking_dist / 50) + 10 + 10 + 5
@@ -400,31 +400,31 @@ def transferBusRail(record, nearStopDf, allUniqueStopDf, allStopWithLinesOnly):
     recordDf = record.copy()  # Make a copy of the input record to avoid unintended modifications
     recordDf["date"] = pd.to_datetime(recordDf["date"])
 
-    actualTimeDiff = (recordDf.iloc[1, 1] - recordDf.iloc[0, 1]).seconds / 60
+    actualTimeDiff = (recordDf.iloc[1, recordDf.columns.get_loc("date")] - recordDf.iloc[0, recordDf.columns.get_loc("date")]).seconds / 60
     currentLine = recordDf.iloc[0, 7]
 
-    lat1 = recordDf.iloc[0, 4]
-    lon1 = recordDf.iloc[0, 5]
-    lat2 = recordDf.iloc[1, 4]
-    lon2 = recordDf.iloc[1, 5]
+    lat1 = recordDf.iat[0, recordDf.columns.get_loc("LATITUD")]
+    lon1 = recordDf.iat[0, recordDf.columns.get_loc("LONGITUD")]
+    lat2 = recordDf.iat[1, recordDf.columns.get_loc("LATITUD")]
+    lon2 = recordDf.iat[1, recordDf.columns.get_loc("LONGITUD")]
 
-    bufferZoneList = nearStopDf[nearStopDf['stop'] == recordDf.iloc[1, 8]].iat[0, 1]
+    bufferZoneList = nearStopDf[nearStopDf['stop'] == recordDf.iloc[1, recordDf.columns.get_loc("IDSTOP")]].iat[0, nearStopDf.columns.get_loc("near_stops")]
     bufferZoneList = ast.literal_eval(bufferZoneList)
 
     for stop in bufferZoneList:
         stop = float(stop)
-        typeOfTransport = allUniqueStopDf[allUniqueStopDf['IDSTOP'] == stop].iat[0, 4]
+        typeOfTransport = allUniqueStopDf[allUniqueStopDf['IDSTOP'] == stop].iat[0, allUniqueStopDf.columns.get_loc("type")]
 
         if typeOfTransport == 1:
             candStopBusLineDf = allStopWithLinesOnly[allStopWithLinesOnly.IDSTOP == stop]
 
             if len(candStopBusLineDf) > 0:
-                candStopBusLineList = candStopBusLineDf.iat[0, 1]
+                candStopBusLineList = candStopBusLineDf.iat[0, candStopBusLineDf.columns.get_loc("lines")]
 
                 if currentLine in candStopBusLineList:
                     dest_stop = stop
-                    cand_lat2 = allStopWithLines[allStopWithLines.IDSTOP == stop].iat[0, 1]
-                    cand_lon2 = allStopWithLines[allStopWithLines.IDSTOP == stop].iat[0, 2]
+                    cand_lat2 = allStopWithLines[allStopWithLines.IDSTOP == stop].iat[0, allStopWithLines.columns.get_loc("LATITUD")]
+                    cand_lon2 = allStopWithLines[allStopWithLines.IDSTOP == stop].iat[0, allStopWithLines.columns.get_loc("LONGITUD")]
                     can_dist = distance_calculate(lat1, cand_lat2, lon1, cand_lon2)
                     walking_dist = distance_calculate(cand_lat2, lat2, cand_lon2, lon2)
 
@@ -555,10 +555,10 @@ if __name__=="__main__":
 
     # Format to match old thesis column order
     usersDf = usersDf[["cardID","date","DPAYPOINT","DENOMINAPARADA","LATITUD","LONGITUD","type","IDLINEA","IDSTOP"]]
-    
+
     # Detect transfers
     usersDf = detect_transfers(usersDf, linesRailDf, nearStopDf, allUniqueStopDf, allStopWithLinesOnly, allStopWithLines)
     
     # Save
     usersDf.to_csv('Feb4-4AMDF.csv', encoding = 'utf-8-sig') 
-    print(f"Finished in {round((time()-t1) / 60), 1} minutes")
+    print(f"Finished in {round((time()-t1) / 60, 1)} minutes")
