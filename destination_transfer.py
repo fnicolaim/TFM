@@ -98,13 +98,13 @@ def load(station_path, stop_path, transactions_path, start_time, end_time, lines
     allPaypointDf = allPaypointDf.sort_values(['IDSTOP'], ascending=[True])
 
     # Load transactions data
-    if os.path.isfile("filtered_data.txt"):
-        usersDf =  pd.read_csv("filtered_data.txt", sep=';')
+    if os.path.isfile(f"{start_time[:10]}_filtered_data.txt"):
+        usersDf =  pd.read_csv(f"{start_time[:10]}_filtered_data.txt", sep=';')
         usersDf['date'] = pd.to_datetime(usersDf['date'], format="%Y-%m-%d %H:%M:%S")
         print("Loaded checkpoint of usersDf")
     else:
         usersDf = load_transactions(transactions_path, start_time, end_time, allPaypointDf)
-        usersDf.to_csv("filtered_data.txt", sep=";", index=False)
+        usersDf.to_csv(f"{start_time[:10]}_filtered_data.txt", sep=";", index=False)
         print("Created checkpoint of usersDf for faster processing")
 
     # Load lines data and process bus lines
@@ -539,26 +539,26 @@ def detect_transfers(usersDf, linesRailDf, nearStopDf, allUniqueStopDf, allStopW
 
 if __name__=="__main__":
 
-    t1 = time()
+    for d in range(2,9):
+        t1 = time()
+        # Load
+        config_dict = {"station_path":"stationInfo.csv",
+                        "stop_path": "stopInfo.csv",
+                        "transactions_path": "transactionData.txt",
+                        "lines_path": "lines.csv",
+                        "near_stops_path": "near.csv",
+                        "start_time":f"2020-02-0{d} 04:00:00",
+                        "end_time":f"2020-02-0{d+1} 03:59:59"}
+        print(f"Loading data for {config_dict['start_time'][:10]}")
+        linesRailDf, nearStopDf, usersDf, allUniqueStopDf, allStopWithLinesOnly, allStopWithLines = load(**config_dict)
+        print(f"Loaded data in {round((time()-t1) / 60,1)} minutes")
 
-    # Load
-    print("Loading data")
-    config_dict = {"station_path":"stationInfo.csv",
-                    "stop_path": "stopInfo.csv",
-                    "transactions_path": "transactionData.txt",
-                    "lines_path": "lines.csv",
-                    "near_stops_path": "near.csv",
-                    "start_time":"2020-02-01 04:00:00",
-                    "end_time":"2020-02-02 03:59:59"}
-    linesRailDf, nearStopDf, usersDf, allUniqueStopDf, allStopWithLinesOnly, allStopWithLines = load(**config_dict)
-    print(f"Loaded data in {round((time()-t1) / 60,1)} minutes")
+        # Format to match old thesis column order
+        usersDf = usersDf[["cardID","date","DPAYPOINT","DENOMINAPARADA","LATITUD","LONGITUD","type","IDLINEA","IDSTOP"]]
 
-    # Format to match old thesis column order
-    usersDf = usersDf[["cardID","date","DPAYPOINT","DENOMINAPARADA","LATITUD","LONGITUD","type","IDLINEA","IDSTOP"]]
-
-    # Detect transfers
-    usersDf = detect_transfers(usersDf, linesRailDf, nearStopDf, allUniqueStopDf, allStopWithLinesOnly, allStopWithLines)
-    
-    # Save
-    usersDf.to_csv('Feb4-4AMDF.csv', encoding = 'utf-8-sig') 
-    print(f"Finished in {round((time()-t1) / 60, 1)} minutes")
+        # Detect transfers
+        usersDf = detect_transfers(usersDf, linesRailDf, nearStopDf, allUniqueStopDf, allStopWithLinesOnly, allStopWithLines)
+        
+        # Save
+        usersDf.to_csv(config_dict["start_time"][:10] + "_matrix.csv", encoding = 'utf-8-sig') 
+        print(f"Finished {config_dict['start_time'][:10]} in {round((time()-t1) / 60, 1)} minutes")
