@@ -98,13 +98,13 @@ def load(station_path, stop_path, transactions_path, start_time, end_time, lines
     allPaypointDf = allPaypointDf.sort_values(['IDSTOP'], ascending=[True])
 
     # Load transactions data
-    if os.path.isfile(f"{start_time[:10]}_filtered_data.txt"):
-        usersDf =  pd.read_csv(f"{start_time[:10]}_filtered_data.txt", sep=';')
+    if os.path.isfile(os.path.join(os.getcwd(), "intermediate", f"{start_time[:10]}_filtered_data.txt")):
+        usersDf =  pd.read_csv(os.path.join(os.getcwd(), "intermediate", f"{start_time[:10]}_filtered_data.txt"), sep=';')
         usersDf['date'] = pd.to_datetime(usersDf['date'], format="%Y-%m-%d %H:%M:%S")
         print("Loaded checkpoint of usersDf")
     else:
         usersDf = load_transactions(transactions_path, start_time, end_time, allPaypointDf)
-        usersDf.to_csv(f"{start_time[:10]}_filtered_data.txt", sep=";", index=False)
+        usersDf.to_csv(os.path.join(os.getcwd(), "intermediate", f"{start_time[:10]}_filtered_data.txt"), sep=";", index=False)
         print("Created checkpoint of usersDf for faster processing")
 
     # Load lines data and process bus lines
@@ -542,11 +542,11 @@ if __name__=="__main__":
     for d in range(2,9):
         t1 = time()
         # Load
-        config_dict = {"station_path":"stationInfo.csv",
-                        "stop_path": "stopInfo.csv",
-                        "transactions_path": "transactionData.txt",
-                        "lines_path": "lines.csv",
-                        "near_stops_path": "near.csv",
+        config_dict = {"station_path": os.path.join(os.getcwd(), "input", "stationInfo.csv"),
+                        "stop_path": os.path.join(os.getcwd(), "input", "stopInfo.csv"),
+                        "transactions_path": os.path.join(os.getcwd(),"input", "transactionData.txt"),
+                        "lines_path": os.path.join(os.getcwd(), "input", "lines.csv"),
+                        "near_stops_path": os.path.join(os.getcwd(), "intermediate", "near.csv"),
                         "start_time":f"2020-02-0{d} 04:00:00",
                         "end_time":f"2020-02-0{d+1} 03:59:59"}
         print(f"Loading data for {config_dict['start_time'][:10]}")
