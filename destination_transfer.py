@@ -539,16 +539,19 @@ def detect_transfers(usersDf, linesRailDf, nearStopDf, allUniqueStopDf, allStopW
 
 if __name__=="__main__":
 
-    for d in range(2,9):
+    for d in range(1,31):
+        d_1 = str(d + 1).zfill(2)
+        d = str(d).zfill(2)
+
         t1 = time()
         # Load
         config_dict = {"station_path": os.path.join(os.getcwd(), "input", "stationInfo.csv"),
                         "stop_path": os.path.join(os.getcwd(), "input", "stopInfo.csv"),
-                        "transactions_path": os.path.join(os.getcwd(),"input", "transactionData.txt"),
+                        "transactions_path": os.path.join(os.getcwd(),"input", "transaction_data_202101.txt"),
                         "lines_path": os.path.join(os.getcwd(), "input", "lines.csv"),
                         "near_stops_path": os.path.join(os.getcwd(), "intermediate", "near.csv"),
-                        "start_time":f"2020-02-0{d} 04:00:00",
-                        "end_time":f"2020-02-0{d+1} 03:59:59"}
+                        "start_time":f"2021-01-{d} 04:00:00",
+                        "end_time":f"2021-01-{d_1} 03:59:59"}
         print(f"Loading data for {config_dict['start_time'][:10]}")
         linesRailDf, nearStopDf, usersDf, allUniqueStopDf, allStopWithLinesOnly, allStopWithLines = load(**config_dict)
         print(f"Loaded data in {round((time()-t1) / 60,1)} minutes")
