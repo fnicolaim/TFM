@@ -8,9 +8,9 @@ import pandas as pd
 from datetime import datetime, timedelta
 from tqdm import tqdm
 
-# Generate a list of objective dates from January 1, 2021, to June 30, 2021
+# Generate a list of objective dates from January 1, 2021, to October 30, 2021
 start_date = datetime(2021, 1, 1)
-end_date = datetime(2021, 6, 30)
+end_date = datetime(2021, 10, 30)
 dates = [(start_date + timedelta(days=i)).strftime('%Y-%m-%d') for i in range((end_date - start_date).days + 1)]
 
 # Initialize an empty list to store DataFrames
@@ -55,7 +55,16 @@ final_df = pd.concat(dfs, ignore_index=True)
 final_df.to_csv(os.path.join(os.getcwd(), "output", "final_odm.csv"), index=False)
 
 # Merge with weather data
-weather_df = pd.read_csv(os.path.join(os.getcwd(), "input", "weather.txt"))
-weather_df["time"] = pd.to_datetime(weather_df["time"],format="%Y-%m-%dT%H:%M")
-final_df = pd.merge(final_df, weather_df,left_on="fecha", right_on="time",how="left").drop(columns=["time"])
+weather_df = pd.read_csv(os.path.join(os.getcwd(), "input", "weather_madrid_2021_01_10.txt"))
+weather_df["time"] = pd.to_datetime(weather_df["time"], format="%Y-%m-%dT%H:%M")
+
+agg_dict = {
+    "temperature_2m (°C)":"mean",
+    "rain (mm)":"sum",
+    "snowfall (cm)":"sum",
+}
+weather_df = weather_df.groupby([pd.Grouper(key='time', freq='H')], as_index=False).agg(agg_dict)
+weather_df = weather_df.rename(columns={"time":"fecha"})
+
+final_df = pd.merge(final_df, weather_df, on="fecha", how="outer").sort_values(by="fecha", ascending=True)
 final_df.to_csv(os.path.join(os.getcwd(),"output", "final_odm_with_weather.csv"), index=False)
