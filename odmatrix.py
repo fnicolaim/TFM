@@ -30,11 +30,22 @@ if __name__=="__main__":
   allUniqueStopDf = allUniqueStopDf.reset_index(drop=True)
   allUniqueStopDf['IDSTOP'] = allUniqueStopDf.index
 
-  # Generate objective dates list
+  # Generate the date_list
   start_date = datetime(2021, 1, 1)
-  end_date = datetime(2021, 6, 30)
+  end_date = datetime(2021, 10, 30)
   date_list = [(start_date + timedelta(days=i)).strftime('%Y-%m-%d') for i in range((end_date - start_date).days + 1)]
 
+  # Filter out the last day of each month
+  date_list = [date for date in date_list if (date.endswith('01-31') or
+                                              date.endswith('02-28') or
+                                              date.endswith('03-31') or
+                                              date.endswith('04-30') or
+                                              date.endswith('05-31') or
+                                              date.endswith('06-30') or
+                                              date.endswith('07-31') or
+                                              date.endswith('08-31') or
+                                              date.endswith('09-30') or
+                                              date.endswith('10-31'))] 
   for date in date_list:
     print(f"Starting date: {date}")
     t1 = time()
